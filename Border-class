@@ -38,11 +38,11 @@ public static void createCyl(Location center, double r, Particle.DustOptions dus
 					if ((cx - x) * (cx - x) + (cz - z) * (cz - z) <= rSquared) { //opposite maths as before to make it full of particles
 						if (error%2==0) {  //this just makes it so not every single block has a particles, it spawns particles 2 blocks apart from each other (more/less based on the values)(again, to avoid lag), there's some maths to always get the even/odds numbers based on what we want
 							if (x%v!=0&&z%v!=0) {
-								SkyBattle.skybattle.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(0,128,128), 3)); //Particles dust options can be quickly found on google, here i put a certain color from a RGB value and the size of the particles
+								world.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(0,128,128), 3)); //Particles dust options can be quickly found on google, here i put a certain color from a RGB value and the size of the particles
 							}
 						} else {
 							if (x%v==0&&z%v==0) {
-								SkyBattle.skybattle.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(0,128,128), 3));
+								world.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(0,128,128), 3));
 							}
 						}
 					}
@@ -54,11 +54,11 @@ public static void createCyl(Location center, double r, Particle.DustOptions dus
 					if ((cx - x) * (cx - x) + (cz - z) * (cz - z) <= rSquared) {
 						if (error%2==0) {
 							if (x%2!=0&&z%2!=0) {
-								SkyBattle.skybattle.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, dust);
+								world.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, dust);
 							}
 						} else {
 							if (x%2==0&&z%2==0) {
-								SkyBattle.skybattle.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, dust);
+								world.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, dust);
 							}
 						}
 					}
