@@ -1,0 +1,90 @@
+// We generate a method asking for a variable center, which is going to be the very center of our cylinder, the radius (aka how wide we want the cylinder to be), [optional] the color of out border if you want to change it based on if it's shrinking or staying still
+// and 2 other variables, the degree should lower as you make the border shrink, otherwise you'll end up with cylinders with 2+ layers of walls (and we dont want that many particles), the error is basically changing the amount of paricles so you dont have them for every single block
+// those last 2 variables have to be tried out a lot and changed until you find the right combination (in my plugins they start as 3 for the error and 360 for the degree, but again, you just have to try them based on how big your cylinder is)
+
+public static void createCyl(Location center, double r, Particle.DustOptions dust, int error,int degree) {
+		int cx = (int) center.getX();
+		int cz = (int) center.getZ();
+		double rSquared = r * r;
+		int v = 3;     // this is a variable used when making the height border, it makes it so not every single block in it has a particle to avoid lag issues, i've never tried it with error values higher than 3 so you might wanna look into this if you're making changes. If your particles are not spawning at all you might just wanna delete this and the code correlated below
+		if (error==3) {
+			v=2;
+		}
+		for (double x = cx - r; x <= cx + r; x+=error) {
+			for (double z = cz - r; z <= cz + r; z+=error) {
+				if ((cx - x) * (cx - x) + (cz - z) * (cz - z) >= rSquared-degree&&(cx - x) * (cx - x) + (cz - z) * (cz - z) <= rSquared+degree) {  //this part is very much just maths on how to make a circle, im not going to make a geometry lesson, but it basically cycles it to spawn particles in a cylinder instead of just a circle
+					if (r>= *insert height border limit*) {  //to calculate the height border limit, count the difference between the height limit you want to set and the y level of the variable center, this makes it so the particles are not spawned in y levels where they would be useless (it would just cause lag without it)
+						for (int y= *insert y level you want the border to start from*;y<*insert y level you want the border to stop at*;) {  //this is the lowest y level your border should reach
+							world.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, dust);  //remember to change it based on the name of your world (I have a public value for this, but it's "World world = Bukkit.getWorld("name of your world file");", you could also just do "Bukkit.getWorld("name of your world file").spawnParticle...." but having a static value for the world is usually the best choice
+							if (r<=18) {  //as the radius of your cylinder becomes smaller, you should generate the particles in more y levels so that players will manage to see the border better, you should try out different values here based on what seems right to you
+								y+=4;
+							} else {
+								y+=8;
+							}
+						}
+					} else { //radius also works for the y since it would create a sphere in a 3d dimention, to avoid the border going past the actual height limit you chose, we had the previous "if". But when the height radius is lower than the height limit you want the border to show as such, and this is what this "else" does
+						for (int y=*insert y level you want the border to start from*;y<center.getBlockY()+r;) {
+							world.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, dust); //spigot stuff that you can easily find with a google search, the parameters are (Particle particle, Location location, int count, double offsetX, double offsetY, double offsetZ, T data)
+							if (r<=18) {
+								y+=4;
+							} else {
+								y+=8;
+							}
+						}
+					}
+				}
+				if (r>=*insert y level limit*){   //This generates the particles for the actual height border (the code before this created hollow circles, now we need particles inside of it
+					int y= *y level limit* ; 
+					if ((cx - x) * (cx - x) + (cz - z) * (cz - z) <= rSquared) { //opposite maths as before to make it full of particles
+						if (error%2==0) {  //this just makes it so not every single block has a particles, it spawns particles 2 blocks apart from each other (more/less based on the values)(again, to avoid lag), there's some maths to always get the even/odds numbers based on what we want
+							if (x%v!=0&&z%v!=0) {
+								SkyBattle.skybattle.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(0,128,128), 3)); //Particles dust options can be quickly found on google, here i put a certain color from a RGB value and the size of the particles
+							}
+						} else {
+							if (x%v==0&&z%v==0) {
+								SkyBattle.skybattle.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(0,128,128), 3));
+							}
+						}
+					}
+				} else {  //this part gets used when the border is lower than you y level limit
+					double y = (double) center.getBlockY()+r;
+					if (y>100) {
+						y=100;
+					}
+					if ((cx - x) * (cx - x) + (cz - z) * (cz - z) <= rSquared) {
+						if (error%2==0) {
+							if (x%2!=0&&z%2!=0) {
+								SkyBattle.skybattle.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, dust);
+							}
+						} else {
+							if (x%2==0&&z%2==0) {
+								SkyBattle.skybattle.spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, dust);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	
+	//this method gets the player locations every certain amount of ticks, and returns true if the player is out of the border (it's gonna be used in a repeating task to damage the player if it returns true)
+
+	public static boolean outBorder(Location loc, double r) {
+
+		boolean damage = false;
+		centermod.setY(loc.getY());
+		if (loc.distance(centermod) > r) {
+			damage = true;
+		} else if (r>=*insert y level limit*) {
+			if (loc.getBlockY()>=100) {
+				damage=true;
+			}
+		} else {
+			if (loc.getBlockY()>=center.getBlockY()+r) {
+				damage=true;
+			}
+		}
+		
+		return damage;
+	}
