@@ -1,0 +1,85 @@
+//to use the border, we have to spawn particles every 20 ticks (1 second). To do so we create a new Runnable, this is just my way to do it, there's plenty others 
+//(you have to initialize your plugin value in your onEnable, in this case my onEnable is in the Main class, so that's gonna be the type of the variable)
+
+public static Main plugin
+public static int taskid1 = 0;
+public static int taskid2 = 0;
+private static Particle.DustOptions teal = new Particle.DustOptions(Color.fromRGB(0,128,128), 3);  //change the colors to what you want, i use teal when the border is still and red when it's shrinking
+private static Particle.DustOptions red = new Particle.DustOptions(Color.fromRGB(255,0,0), 3);
+public static double radius = 110;  //intialize the radius as double, otherwise you cant shrink it by half a block and it shrinks faster than you probably want
+
+
+public static void startWorldBorder() {
+
+		radius=110;  //starting radius for your cylinder
+
+		taskid1 = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+
+			@Override
+			public void run() {
+
+				border1=border1-1;
+
+				if (border1!=0) {
+					Border.createCyl(location, radius, teal, 3,360);  //these values are explained in Border-class
+
+				} else {
+
+					plugin.getServer().getScheduler().cancelTask(taskid1);
+
+					taskid2 = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+
+						@Override
+						public void run() {
+
+							border2=border2-1;
+
+							if (border2!=0) {
+								if (radius>=5) {  //shrinks the border until the radius is = 5
+									radius-=0.5;  //shrinks the border by half a block every time this runnable is called (in this case every 20 ticks)
+									Border.createCyl(location, radius, red, 3,320);
+								} else {
+									Border.createCyl(location, radius, teal, 2,240);
+								}
+							} else {
+
+								plugin.getServer().getScheduler().cancelTask(taskid2);
+							}
+
+						}
+
+					}, 0, 20);
+
+				}
+
+			}
+
+		}, 0, 20);
+	}
+}
+
+//for damaging the player there's a different method that gets called every 10 ticks (0.5 seconds), this way the player gets damaged more often
+//to stop this type of scheduler i just do "plugin.getServer().getScheduler().cancelTasks(plugin);" when the game/round has ended. This cancels all the tasks, so if you have any that you want still running you have to use taskids like above
+
+public static void damage() {
+
+		Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+
+			@Override
+			public void run() {
+
+				for (Player p : Bukkit.getOnlinePlayers()) {
+					if (p.getGameMode()==GameMode.SURVIVAL) {
+						if (Teams.teamChecker(p.getName())) {  //optional but i have another method to check if the player is in one of the playing teams (Admin wont count), this way this method doesnt get called for all the online players
+							Location l = p.getLocation();
+							if (!(l.getBlockY()>3)) {  //this kills the player at the lowest y level i chose for the map, this way they're not gonna have to wait to die to the void
+								p.damage(10000);
+							} else if (Border.outBorder(p.getLocation(), radius)==true) {
+								p.damage(1);  //damages the player when he's out the border
+							}
+						}
+					}
+				}
+			}
+		}, 0, 10);
+	}
